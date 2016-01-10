@@ -11,6 +11,8 @@ Periodically scrapes metrics via the [PowerDNS HTTP-API](https://doc.powerdns.co
 * [Recursor](https://www.powerdns.com/recursor.html)
 * [Dnsdist](http://dnsdist.org/) (coming soon)
 
+---
+
 ## Flags
 
 Name | Description | Default
