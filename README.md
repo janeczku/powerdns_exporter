@@ -1,6 +1,6 @@
 # PowerDNS Exporter
 
-[![Build Status](https://travis-ci.org/janeczku/powerdns-exporter.svg?branch=master)](https://travis-ci.org/janeczku/powerdns-exporter)
+[![Travis](https://img.shields.io/travis/janeczku/powerdns_exporter.svg)](https://travis-ci.org/janeczku/powerdns_exporter)
 
 [PowerDNS](https://www.powerdns.com/) exporter for [Prometheus](http://prometheus.io/)
 
