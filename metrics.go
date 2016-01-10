@@ -14,11 +14,11 @@ type counterVecDefinition struct {
 	name     string
 	desc     string
 	label    string
+	// Maps PowerDNS stats names to Prometheus label value
 	labelMap map[string]string
 }
 
-// Mappings used in CounterVec definitions
-// Maps PowerDNS stats key name to Prometheus label value
+// Used in counterVecDefinition.labelMap
 var (
 	rTimeLabelMap = map[string]string{
 		"answers0-1":       "0-1ms",
@@ -26,7 +26,7 @@ var (
 		"answers10-100":    "10-100ms",
 		"answers100-1000":  "100-1000ms",
 		"answers-slow":     ">1000ms",
-		"packetcache-hits": "0ms",
+		"packetcache-hits": "0-1ms",
 	}
 
 	rCodeLabelMap = map[string]string{
@@ -41,21 +41,12 @@ var (
 		"unreachables":        "ns-unreachable",
 		"outgoing-timeouts":   "outgoing-timeout",
 	}
-
-	qTypeLabelMap = map[string]string{
-		"recursing-questions": "recurse",
-		"tcp-queries":         "tcp",
-		"answers10-100":       "10-100ms",
-		"answers100-1000":     "100-1000ms",
-		"answers-slow":        ">1000ms",
-		"packetcache-hits":    "0ms",
-	}
 )
 
 // PowerDNS recursor metrics definitions
 var (
 	recursorGaugeDefs = []gaugeDefinition{
-		gaugeDefinition{1, "latency_avg_microseconds", "Question-to-answer latency average in microseconds.", "qa-latency"},
+		gaugeDefinition{1, "latency_average_microseconds", "Question-to-answer latency average in microseconds.", "qa-latency"},
 		gaugeDefinition{2, "concurrent_queries", "Number of concurrent queries.", "concurrent-queries"},
 		gaugeDefinition{3, "cache_size", "Number of entries in the cache.", "cache-entries"},
 	}
