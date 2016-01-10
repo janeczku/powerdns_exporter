@@ -21,34 +21,34 @@ type counterVecDefinition struct {
 // Maps PowerDNS stats key name to Prometheus label value
 var (
 	rTimeLabelMap = map[string]string{
-		"answers0-1": "0-1ms",
-		"answers1-10": "1-10ms",
-		"answers10-100": "10-100ms",
-		"answers100-1000": "100-1000ms",
-		"answers-slow": ">1000ms",
+		"answers0-1":       "0-1ms",
+		"answers1-10":      "1-10ms",
+		"answers10-100":    "10-100ms",
+		"answers100-1000":  "100-1000ms",
+		"answers-slow":     ">1000ms",
 		"packetcache-hits": "0ms",
 	}
 
 	rCodeLabelMap = map[string]string{
 		"servfail-answers": "servfail",
 		"nxdomain-answers": "nxdomain",
-		"noerror-answers": "noerror",
+		"noerror-answers":  "noerror",
 	}
 
 	exceptionsLabelMap = map[string]string{
-		"resource-limits": "resource-limit",
+		"resource-limits":     "resource-limit",
 		"over-capacity-drops": "over-capacity-drop",
-		"unreachables": "ns-unreachable",
-		"outgoing-timeouts": "outgoing-timeout",
+		"unreachables":        "ns-unreachable",
+		"outgoing-timeouts":   "outgoing-timeout",
 	}
 
 	qTypeLabelMap = map[string]string{
 		"recursing-questions": "recurse",
-		"tcp-queries": "tcp",
-		"answers10-100": "10-100ms",
-		"answers100-1000": "100-1000ms",
-		"answers-slow": ">1000ms",
-		"packetcache-hits": "0ms",
+		"tcp-queries":         "tcp",
+		"answers10-100":       "10-100ms",
+		"answers100-1000":     "100-1000ms",
+		"answers-slow":        ">1000ms",
+		"packetcache-hits":    "0ms",
 	}
 )
 
@@ -59,7 +59,7 @@ var (
 		gaugeDefinition{2, "concurrent_queries", "Number of concurrent queries.", "concurrent-queries"},
 		gaugeDefinition{3, "cache_size", "Number of entries in the cache.", "cache-entries"},
 	}
-	
+
 	recursorCounterVecDefs = []counterVecDefinition{
 		counterVecDefinition{
 			1, "incoming_queries_total", "Total number of incoming queries by network.", "net",
@@ -123,6 +123,6 @@ var (
 
 // PowerDNS Dnsdist metrics definitions
 var (
-	dnsdistGaugeDefs = []gaugeDefinition{}
+	dnsdistGaugeDefs      = []gaugeDefinition{}
 	dnsdistCounterVecDefs = []counterVecDefinition{}
 )

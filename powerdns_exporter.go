@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	namespace = "powerdns"
-	apiInfoEndpoint = "servers/localhost"
+	namespace        = "powerdns"
+	apiInfoEndpoint  = "servers/localhost"
 	apiStatsEndpoint = "servers/localhost/statistics"
 )
 
@@ -30,7 +30,7 @@ var (
 				if err != nil {
 					return nil, err
 				}
-				if err := c.SetDeadline(time.Now().Add(5*time.Second)); err != nil {
+				if err := c.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
 					return nil, err
 				}
 				return c, nil
@@ -43,11 +43,11 @@ var (
 type ServerInfo struct {
 	Kind       string `json:"type"`
 	ID         string `json:"id"`
-	URL        string `json:"url"`    
+	URL        string `json:"url"`
 	DaemonType string `json:"daemon_type"`
 	Version    string `json:"version"`
 	ConfigUrl  string `json:"config_url"`
-	ZonesUrl  string `json:"zones_url"`
+	ZonesUrl   string `json:"zones_url"`
 }
 
 // StatsEntry is used to parse JSON data from 'server/localhost/statistics' endpoint
@@ -60,10 +60,10 @@ type StatsEntry struct {
 // Exporter collects PowerDNS stats from the given HostURL and exports them using
 // the prometheus metrics package.
 type Exporter struct {
-	HostURL           *url.URL
-	ServerType        string
-	ApiKey            string
-	mutex             sync.RWMutex
+	HostURL    *url.URL
+	ServerType string
+	ApiKey     string
+	mutex      sync.RWMutex
 
 	up                prometheus.Gauge
 	totalScrapes      prometheus.Counter
@@ -78,10 +78,10 @@ type Exporter struct {
 func newCounterVecMetric(serverType, metricName, docString string, labelNames []string) *prometheus.CounterVec {
 	return prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace:   namespace,
-			Subsystem:   serverType,
-			Name:        metricName,
-			Help:        docString,
+			Namespace: namespace,
+			Subsystem: serverType,
+			Name:      metricName,
+			Help:      docString,
 		},
 		labelNames,
 	)
@@ -90,10 +90,10 @@ func newCounterVecMetric(serverType, metricName, docString string, labelNames []
 func newGaugeMetric(serverType, metricName, docString string) prometheus.Gauge {
 	return prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Namespace:   namespace,
-			Subsystem:   serverType,
-			Name:        metricName,
-			Help:        docString,
+			Namespace: namespace,
+			Subsystem: serverType,
+			Name:      metricName,
+			Help:      docString,
 		},
 	)
 }
@@ -127,9 +127,9 @@ func NewExporter(apiKey, serverType string, hostURL *url.URL) *Exporter {
 	}
 
 	return &Exporter{
-		HostURL:       hostURL,
-		ServerType:    serverType,
-		ApiKey:        apiKey,
+		HostURL:    hostURL,
+		ServerType: serverType,
+		ApiKey:     apiKey,
 		up: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: namespace,
 			Subsystem: serverType,
@@ -148,10 +148,10 @@ func NewExporter(apiKey, serverType string, hostURL *url.URL) *Exporter {
 			Name:      "exporter_json_parse_failures",
 			Help:      "Number of errors while parsing PowerDNS JSON stats.",
 		}),
-		gaugeMetrics: gaugeMetrics,
+		gaugeMetrics:      gaugeMetrics,
 		counterVecMetrics: counterVecMetrics,
-		gaugeDefs: gaugeDefs,
-		counterVecDefs: counterVecDefs,
+		gaugeDefs:         gaugeDefs,
+		counterVecDefs:    counterVecDefs,
 	}
 }
 
@@ -201,7 +201,7 @@ func (e *Exporter) scrape(jsonStats chan<- []StatsEntry) {
 		return
 	}
 
-    e.up.Set(1)
+	e.up.Set(1)
 
 	jsonStats <- data
 }
@@ -265,29 +265,29 @@ func getServerInfo(hostURL *url.URL, apiKey string) (*ServerInfo, error) {
 
 func getJSON(url, apiKey string, data interface{}) error {
 	req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
-    req.Header.Add("X-API-Key", apiKey)
+	req.Header.Add("X-API-Key", apiKey)
 	resp, err := client.Do(req)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
 	defer resp.Body.Close()
 
-    if resp.StatusCode != http.StatusOK {
-        content, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-            return err
-        }
-        return fmt.Errorf(string(content))
-    }
+	if resp.StatusCode != http.StatusOK {
+		content, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(content))
+	}
 
-    if err := json.NewDecoder(resp.Body).Decode(data); err != nil {
-        return err
-    }
+	if err := json.NewDecoder(resp.Body).Decode(data); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -300,10 +300,10 @@ func apiURL(hostURL *url.URL, path string) string {
 
 func main() {
 	var (
-		listenAddress             = flag.String("listen-address", ":9130", "Address to listen on for web interface and telemetry.")
-		metricsPath               = flag.String("metric-path", "/metrics", "Path under which to expose metrics.")
-		apiURL                    = flag.String("api-url", "http://localhost:8001/", "Base-URL of PowerDNS authoritative server/recursor API.")
-		apiKey                    = flag.String("api-key", "", "PowerDNS API Key")
+		listenAddress = flag.String("listen-address", ":9130", "Address to listen on for web interface and telemetry.")
+		metricsPath   = flag.String("metric-path", "/metrics", "Path under which to expose metrics.")
+		apiURL        = flag.String("api-url", "http://localhost:8001/", "Base-URL of PowerDNS authoritative server/recursor API.")
+		apiKey        = flag.String("api-key", "", "PowerDNS API Key")
 	)
 	flag.Parse()
 

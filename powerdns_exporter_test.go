@@ -105,13 +105,13 @@ func TestParseServerInfo(t *testing.T) {
 	}
 
 	want := &ServerInfo{
-		Kind: "Server",
-		ID: "localhost",
-		URL: "/servers/localhost",
+		Kind:       "Server",
+		ID:         "localhost",
+		URL:        "/servers/localhost",
 		DaemonType: "recursor",
-		Version: "3.7.3",
-		ConfigUrl: "/servers/localhost/config{/config_setting}",
-		ZonesUrl: "/servers/localhost/zones{/zone}",
+		Version:    "3.7.3",
+		ConfigUrl:  "/servers/localhost/config{/config_setting}",
+		ZonesUrl:   "/servers/localhost/zones{/zone}",
 	}
 
 	if !reflect.DeepEqual(want, got) {
