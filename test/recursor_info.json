@@ -1,0 +1,1 @@
+{"type":"Server","id":"localhost","url":"/servers/localhost","daemon_type":"recursor","version":"3.7.3","config_url":"/servers/localhost/config{/config_setting}","zones_url":"/servers/localhost/zones{/zone}"}

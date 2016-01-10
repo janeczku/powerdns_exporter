@@ -1,0 +1,9 @@
+language: go
+go: 1.4
+
+before_script:
+ - go get -v github.com/janeczku/powerdns_exporter
+
+script:
+ - go build -a -v github.com/janeczku/powerdns_exporter/...
+ - go test -v github.com/janeczku/powerdns_exporter/...

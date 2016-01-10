@@ -1,0 +1,7 @@
+.build
+bin/powerdns_exporter*
+powerdns_exporter
+*.tar.gz
+*.test
+*.mprof
+*-stamp
