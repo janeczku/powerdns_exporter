@@ -20,7 +20,7 @@ Name | Description | Default
 listen-address | Host:Port pair to run exporter on | `:9130`
 metric-path | Path under which to expose metrics for Prometheus | `/metrics`
 api-url | Base-URL of PowerDNS authoritative server/recursor API | `http://localhost:8001/`
-api-key | PowerDNS API Key | ` `
+api-key | PowerDNS API Key | `-`
 
 ## Installation
 
@@ -46,7 +46,7 @@ go run powerdns_exporter --help
 
 The `api-url` flag value should have this format:
 
-* PowerDNS server/recursor 3.x: `http://host:port`
+* PowerDNS server/recursor 3.x: `http://host:port/`
 * PowerDNS server/recursor 4.x: `http://host:port/api/v1`
 
 [See here](https://doc.powerdns.com/md/httpapi/README/) for the required configuration options to enable the built-in API server in PowerDNS.
