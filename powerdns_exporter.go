@@ -9,6 +9,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -113,9 +114,9 @@ func NewExporter(apiKey, serverType string, hostURL *url.URL) *Exporter {
 	case "authoritative":
 		gaugeDefs = authoritativeGaugeDefs
 		counterVecDefs = authoritativeCounterVecDefs
-	default:
-		gaugeDefs = authoritativeGaugeDefs
-		counterVecDefs = authoritativeCounterVecDefs
+	case "dnsdist":
+		gaugeDefs = dnsdistGaugeDefs
+		counterVecDefs = dnsdistCounterVecDefs
 	}
 
 	for _, def := range gaugeDefs {
@@ -179,7 +180,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 	e.resetMetrics()
-	e.setMetrics(jsonStats)
+	e.setMetrics(jsonStats, ch)
 	ch <- e.up
 	ch <- e.totalScrapes
 	ch <- e.jsonParseFailures
@@ -221,7 +222,7 @@ func (e *Exporter) collectMetrics(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry) {
+func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry, ch chan<- prometheus.Metric) {
 	statsMap := make(map[string]float64)
 	stats := <-jsonStats
 	for _, s := range stats {
@@ -233,6 +234,10 @@ func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry) {
 
 	for _, def := range e.gaugeDefs {
 		if value, ok := statsMap[def.key]; ok {
+			// latency gauge needs to be converted from microseconds to seconds
+			if strings.HasSuffix(def.key, "latency") {
+				value = value / 1000000
+			}
 			e.gaugeMetrics[def.id].Set(value)
 		} else {
 			log.Errorf("Expected PowerDNS stats key not found: %s", def.key)
@@ -249,6 +254,15 @@ func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry) {
 				e.jsonParseFailures.Inc()
 			}
 		}
+	}
+
+	if e.ServerType == "recursor" {
+		h, err := makeRecursorRTimeHistogram(statsMap)
+		if err != nil {
+			log.Errorf("Could not create response time histogram: %v", err)
+			return
+		}
+		ch <- h
 	}
 }
 

@@ -1,6 +1,13 @@
 package main
 
-// gaugeDefinition is used to programmatically create prometheus.Gauge metrics
+import (
+	"fmt"
+	"sort"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+// Used to programmatically create prometheus.Gauge metrics
 type gaugeDefinition struct {
 	id   int
 	name string
@@ -8,7 +15,7 @@ type gaugeDefinition struct {
 	key  string
 }
 
-// counterVecDefinition is used to programmatically create prometheus.CounterVec metrics
+// Used to programmatically create prometheus.CounterVec metrics
 type counterVecDefinition struct {
 	id       int
 	name     string
@@ -18,15 +25,21 @@ type counterVecDefinition struct {
 	labelMap map[string]string
 }
 
-// Used in counterVecDefinition.labelMap
 var (
+	rTimeBucketMap = map[string]float64{
+		"answers0-1":       .001,
+		"answers1-10":      .01,
+		"answers10-100":    .1,
+		"answers100-1000":  1,
+		"answers-slow":     0,
+	}
+
 	rTimeLabelMap = map[string]string{
 		"answers0-1":       "0-1ms",
 		"answers1-10":      "1-10ms",
 		"answers10-100":    "10-100ms",
 		"answers100-1000":  "100-1000ms",
 		"answers-slow":     ">1000ms",
-		"packetcache-hits": "0-1ms",
 	}
 
 	rCodeLabelMap = map[string]string{
@@ -46,7 +59,7 @@ var (
 // PowerDNS recursor metrics definitions
 var (
 	recursorGaugeDefs = []gaugeDefinition{
-		gaugeDefinition{1, "latency_average_microseconds", "Question-to-answer latency average in microseconds.", "qa-latency"},
+		gaugeDefinition{1, "latency_average_seconds", "Exponential moving average of question-to-answer latency.", "qa-latency"},
 		gaugeDefinition{2, "concurrent_queries", "Number of concurrent queries.", "concurrent-queries"},
 		gaugeDefinition{3, "cache_size", "Number of entries in the cache.", "cache-entries"},
 	}
@@ -65,15 +78,15 @@ var (
 			map[string]string{"cache-hits": "hit", "cache-misses": "miss"},
 		},
 		counterVecDefinition{4, "answers_rcodes_total", "Total number of answers by response code.", "rcode", rCodeLabelMap},
-		counterVecDefinition{5, "answers_rtime_total", "Total number of answers by response time.", "responsetime", rTimeLabelMap},
-		counterVecDefinition{6, "exceptions_total", "Total number of exceptions by type.", "type", exceptionsLabelMap},
+		counterVecDefinition{5, "answers_rtime_total", "Total number of answers grouped by response time slots.", "timeslot", rTimeLabelMap},
+		counterVecDefinition{6, "exceptions_total", "Total number of exceptions by error.", "error", exceptionsLabelMap},
 	}
 )
 
 // PowerDNS authoritative server metrics definitions
 var (
 	authoritativeGaugeDefs = []gaugeDefinition{
-		gaugeDefinition{1, "latency_avg_microseconds", "Question-to-answer latency average in microseconds.", "latency"},
+		gaugeDefinition{1, "latency_average_seconds", "Exponential moving average of question-to-answer latency.", "latency"},
 		gaugeDefinition{2, "packet_cache_size", "Number of entries in the packet cache.", "packetcache-size"},
 		gaugeDefinition{3, "signature_cache_size", "Number of entries in the signature cache.", "signature-cache-size"},
 		gaugeDefinition{4, "key_cache_size", "Number of entries in the key cache.", "key-cache-size"},
@@ -106,7 +119,7 @@ var (
 			map[string]string{"query-cache-hit": "hit", "query-cache-miss": "miss"},
 		},
 		counterVecDefinition{
-			7, "exceptions_total", "Total number of exceptions by type.", "type",
+			7, "exceptions_total", "Total number of exceptions by error.", "error",
 			map[string]string{"servfail-packets": "servfail", "timedout-questions": "timeout", "udp-recvbuf-errors": "recvbuf-error", "udp-sndbuf-errors": "sndbuf-error"},
 		},
 	}
@@ -117,3 +130,46 @@ var (
 	dnsdistGaugeDefs      = []gaugeDefinition{}
 	dnsdistCounterVecDefs = []counterVecDefinition{}
 )
+
+// Creates a fixed-value response time histogram from the following stats counters:
+// answers0-1, answers1-10, answers10-100, answers100-1000, answers-slow
+func makeRecursorRTimeHistogram(statsMap map[string]float64) (prometheus.Metric, error) {
+	buckets := make(map[float64]uint64)
+	var count uint64
+	for k, v := range rTimeBucketMap {
+		if _, ok := statsMap[k]; !ok {
+			return nil, fmt.Errorf("Required PowerDNS stats key not found: %s", k)
+		}
+		value := statsMap[k]
+		if v != 0 {
+			buckets[v] = uint64(value)
+		}
+		count += uint64(value)
+	}
+
+	// Convert linear buckets to cumulative buckets
+	var keys []float64
+	for k, _ := range buckets {
+		keys = append(keys, k)
+	}
+	sort.Float64s(keys)
+	var cumsum uint64
+	for _, k := range keys {
+		cumsum = cumsum + buckets[k]
+		buckets[k] = cumsum
+	}
+
+	desc := prometheus.NewDesc(
+		namespace + "_recursor_response_time_seconds",
+		"Histogram of PowerDNS recursor response times in seconds.",
+		[]string{},
+		prometheus.Labels{},
+	)
+
+	h, err := prometheus.NewConstHistogram(desc, count, 0, buckets)
+	if err != nil {
+		return nil, err
+	}
+
+	return h, nil
+}
