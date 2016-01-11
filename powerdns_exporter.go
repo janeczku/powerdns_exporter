@@ -180,11 +180,11 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 	e.resetMetrics()
-	e.setMetrics(jsonStats, ch)
+	statsMap := e.setMetrics(jsonStats)
 	ch <- e.up
 	ch <- e.totalScrapes
 	ch <- e.jsonParseFailures
-	e.collectMetrics(ch)
+	e.collectMetrics(ch, statsMap)
 }
 
 func (e *Exporter) scrape(jsonStats chan<- []StatsEntry) {
@@ -213,17 +213,26 @@ func (e *Exporter) resetMetrics() {
 	}
 }
 
-func (e *Exporter) collectMetrics(ch chan<- prometheus.Metric) {
+func (e *Exporter) collectMetrics(ch chan<- prometheus.Metric, statsMap map[string]float64) {
 	for _, m := range e.counterVecMetrics {
 		m.Collect(ch)
 	}
 	for _, m := range e.gaugeMetrics {
 		ch <- m
 	}
+
+	if e.ServerType == "recursor" {
+		h, err := makeRecursorRTimeHistogram(statsMap)
+		if err != nil {
+			log.Errorf("Could not create response time histogram: %v", err)
+			return
+		}
+		ch <- h
+	}
 }
 
-func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry, ch chan<- prometheus.Metric) {
-	statsMap := make(map[string]float64)
+func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry) (statsMap map[string]float64) {
+	statsMap = make(map[string]float64)
 	stats := <-jsonStats
 	for _, s := range stats {
 		statsMap[s.Name] = s.Value
@@ -255,15 +264,7 @@ func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry, ch chan<- prometheu
 			}
 		}
 	}
-
-	if e.ServerType == "recursor" {
-		h, err := makeRecursorRTimeHistogram(statsMap)
-		if err != nil {
-			log.Errorf("Could not create response time histogram: %v", err)
-			return
-		}
-		ch <- h
-	}
+	return
 }
 
 func getServerInfo(hostURL *url.URL, apiKey string) (*ServerInfo, error) {
