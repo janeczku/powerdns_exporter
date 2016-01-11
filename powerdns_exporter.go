@@ -243,7 +243,7 @@ func (e *Exporter) setMetrics(jsonStats <-chan []StatsEntry) (statsMap map[strin
 
 	for _, def := range e.gaugeDefs {
 		if value, ok := statsMap[def.key]; ok {
-			// latency gauge needs to be converted from microseconds to seconds
+			// latency gauges need to be converted from microseconds to seconds
 			if strings.HasSuffix(def.key, "latency") {
 				value = value / 1000000
 			}
@@ -315,7 +315,7 @@ func apiURL(hostURL *url.URL, path string) string {
 
 func main() {
 	var (
-		listenAddress = flag.String("listen-address", ":9130", "Address to listen on for web interface and telemetry.")
+		listenAddress = flag.String("listen-address", ":9120", "Address to listen on for web interface and telemetry.")
 		metricsPath   = flag.String("metric-path", "/metrics", "Path under which to expose metrics.")
 		apiURL        = flag.String("api-url", "http://localhost:8001/", "Base-URL of PowerDNS authoritative server/recursor API.")
 		apiKey        = flag.String("api-key", "", "PowerDNS API Key")

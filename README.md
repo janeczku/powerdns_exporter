@@ -17,7 +17,7 @@ Periodically scrapes metrics via the [PowerDNS HTTP-API](https://doc.powerdns.co
 
 Name | Description | Default
 ---- | ---- | ----
-listen-address | Host:Port pair to run exporter on | `:9130`
+listen-address | Host:Port pair to run exporter on | `:9120`
 metric-path | Path under which to expose metrics for Prometheus | `/metrics`
 api-url | Base-URL of PowerDNS authoritative server/recursor API | `http://localhost:8001/`
 api-key | PowerDNS API Key | `-`
@@ -55,4 +55,4 @@ The `api-url` flag value should have this format:
 
 To run the PowerDNS exporter as a Docker container, run:
 
-    $ docker run -p 9130:9130 janeczku/powerdns-exporter -api-url="http://host:port/" -api-key="YOUR_API_KEY"
+    $ docker run -p 9120:9120 janeczku/powerdns-exporter -api-url="http://host:port/" -api-key="YOUR_API_KEY"
