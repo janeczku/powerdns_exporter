@@ -166,7 +166,7 @@ func makeRecursorRTimeHistogram(statsMap map[string]float64) (prometheus.Metric,
 		prometheus.Labels{},
 	)
 
-	h, err := prometheus.NewConstHistogram(desc, count, 0, buckets)
+	h, err := prometheus.MustNewConstHistogram(desc, count, 0, buckets)
 	if err != nil {
 		return nil, err
 	}
